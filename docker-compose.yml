@@ -3,7 +3,9 @@ services:
 
   database:
     image: mariadb:10.0
-    restart: on-failure
+    deploy:
+      restart:
+        condition: on-failure
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
       - MYSQL_DATABASE=partkeepr
@@ -13,8 +15,13 @@ services:
       - mysql-data:/var/lib/mysql
 
   partkeepr:
-    image: mhubig/partkeepr:latest
-    restart: on-failure
+    image: rbalcortint/partkeepr:latest
+    deploy:
+      restart:
+        condition: on-failure
+      resources:
+        limits:
+          memory: 1Gb
     environment:
       - PARTKEEPR_DATABASE_HOST
       - PARTKEEPR_DATABASE_NAME
@@ -61,7 +68,7 @@ services:
       - PARTKEEPR_USERS_LIMIT
       - PARTKEEPR_SECRET
     ports:
-      - "8080:80"
+      - 80
     volumes:
       - partkeepr-conf:/var/www/html/app/config
       - partkeepr-data:/var/www/html/data
@@ -70,8 +77,10 @@ services:
       - database
 
   cronjob:
-    image: mhubig/partkeepr:latest
-    restart: on-failure
+    image: rbalcortint/partkeepr:latest
+    deploy:
+      restart:
+        condition: on-failure
     entrypoint: []
     command: bash -c "crontab /etc/cron.d/partkeepr && cron -f"
     volumes:

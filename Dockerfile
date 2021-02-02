@@ -15,6 +15,7 @@ RUN set -ex \
         libpng-dev \
         libldap2-dev \
         cron \
+        rsync \
     --no-install-recommends && rm -r /var/lib/apt/lists/* \
     \
     && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
@@ -24,18 +25,23 @@ RUN set -ex \
     && pecl install apcu_bc-beta \
     && docker-php-ext-enable apcu \
     \
-    && cd /var/www/html \
-    && curl -sL https://downloads.partkeepr.org/partkeepr-${PARTKEEPR_VERSION}.tbz2 \
-        |bsdtar --strip-components=1 -xvf- \
     && chown -R www-data:www-data /var/www/html \
     \
-    && a2enmod rewrite
+    && a2enmod rewrite \
+    && mkdir /usr/local/src/partkeepr \
+    && cd /usr/local/src/partkeepr \
+    && curl -sL https://downloads.partkeepr.org/partkeepr-${PARTKEEPR_VERSION}.tbz2 \
+        |bsdtar --strip-components=1 -xvf- \
+    && chown -R www-data:www-data /usr/local/src/partkeepr \
+    && chmod -R ug+w /usr/local/src/partkeepr/app \
+    && chmod -R ug+w /usr/local/src/partkeepr/data \
+    && chmod -R ug+w /usr/local/src/partkeepr/web
 
 COPY crontab /etc/cron.d/partkeepr
-COPY info.php /var/www/html/web/info.php
+COPY info.php /usr/local/src/partkeepr/web/info.php
 COPY php.ini /usr/local/etc/php/php.ini
 COPY apache.conf /etc/apache2/sites-available/000-default.conf
-COPY docker-php-entrypoint mkparameters parameters.template /usr/local/bin/
+COPY docker-php-entrypoint mkparameters parameters.template check_web_settings /usr/local/bin/
 
 VOLUME ["/var/www/html/data", "/var/www/html/web"]
 

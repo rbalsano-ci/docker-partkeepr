@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# can put any useful diagnostics into this HTML page
+CHECK_FILE=/var/www/html/web/web_checks.html
+sleep 20
+echo "<html><body></body></html>" > $CHECK_FILE
+chmod 644 $CHECK_FILE
+chown www-data:www-data $CHECK_FILE
+
+# Provide a way to retrieve the setup auth key
+KEY_FILE=/var/www/html/app/authkey.php
+while [ ! -e $KEY_FILE ]
+do
+  sleep 15
+done
+echo "<html><body>" > $CHECK_FILE
+cat $KEY_FILE >> $CHECK_FILE
+echo "</body></html>" >> $CHECK_FILE
+
+# eventually just delete this file
+sleep 300
+rm $CHECK_FILE

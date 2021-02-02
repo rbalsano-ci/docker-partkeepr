@@ -1,11 +1,23 @@
 #!/bin/sh
 set -e
 
-PARAMETERS_FILE='/var/www/html/app/config/parameters.php'
+# only do this setup for the web service
+if echo "$*" | grep -q 'apache2-foreground'
+then
+  # copy files from local image over to volume (on NFS)
+  rsync -a --ignore-existing /usr/local/src/partkeepr/ /var/www/html
 
-mkparameters > $PARAMETERS_FILE
-chown -R www-data:www-data /var/www/html/app
-chown -R www-data:www-data /var/www/html/web
+  PARAMETERS_FILE='/var/www/html/app/config/parameters.php'
+  mkparameters > $PARAMETERS_FILE
+
+  # so we can pass the PHP settings check
+  chmod ug+w $PARAMETERS_FILE /var/www/html/web/info.php
+
+  chown -R www-data:www-data /var/www/html/app
+  chown -R www-data:www-data /var/www/html/web
+
+  nohup check_web_settings &
+fi
 
 # first arg is `-f` or `--some-option`
 if [ "${1#-}" != "$1" ]; then
